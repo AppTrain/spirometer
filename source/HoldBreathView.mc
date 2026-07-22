@@ -5,7 +5,7 @@ import Toybox.Timer;
 
 class HoldBreathView extends WatchUi.View {
 
-    var countdown as Number = 5;
+    var countdown as Number = Constants.HOLD_BREATH_SECONDS;
     var timer as Timer.Timer?;
 
     function initialize() {

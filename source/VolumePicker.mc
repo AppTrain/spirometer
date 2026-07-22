@@ -5,10 +5,7 @@ import Toybox.Application;
 
 class VolumePicker extends WatchUi.View {
 
-    var selectedVolume as Number = 1500;
-    const MIN_VOLUME = 250;
-    const MAX_VOLUME = 4250;
-    const INCREMENT = 250;
+    var selectedVolume as Number = Constants.DEFAULT_VOLUME;
 
     function initialize() {
         View.initialize();
@@ -42,15 +39,15 @@ class VolumePicker extends WatchUi.View {
     }
 
     function increaseVolume() as Void {
-        if (selectedVolume < MAX_VOLUME) {
-            selectedVolume += INCREMENT;
+        if (selectedVolume < Constants.MAX_VOLUME) {
+            selectedVolume += Constants.INCREMENT;
             WatchUi.requestUpdate();
         }
     }
 
     function decreaseVolume() as Void {
-        if (selectedVolume > MIN_VOLUME) {
-            selectedVolume -= INCREMENT;
+        if (selectedVolume > Constants.MIN_VOLUME) {
+            selectedVolume -= Constants.INCREMENT;
             WatchUi.requestUpdate();
         }
     }

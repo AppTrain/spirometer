@@ -29,42 +29,61 @@ class VolumeHistoryView extends WatchUi.View {
         var chartHeight = chartBottom - chartTop;
         var chartLeft = 40;
         var chartRight = width - 40;
-        var barWidth = (chartRight - chartLeft) / 7;
+        var stepX = (chartRight - chartLeft) / 6; // 7 points, 6 gaps
 
-        // Find max volume for scaling
-        var maxVol = 500;
+        // Fixed scale: 0 to max volume
+        var maxVol = Constants.MAX_VOLUME;
+
+        // Draw Y axis
+        dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+        dc.drawLine(chartLeft, chartTop, chartLeft, chartBottom);
+        // Draw X axis
+        dc.drawLine(chartLeft, chartBottom, chartRight, chartBottom);
+
+        // Y axis labels (litres)
+        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(chartLeft - 2, chartTop, font, "4.2", Graphics.TEXT_JUSTIFY_RIGHT);
+        dc.drawText(chartLeft - 2, chartTop + chartHeight / 2 - fontH / 2, font, "2L", Graphics.TEXT_JUSTIFY_RIGHT);
+        dc.drawText(chartLeft - 2, chartBottom - fontH, font, "0", Graphics.TEXT_JUSTIFY_RIGHT);
+
+        // Plot dots and connecting lines
+        var prevX = 0;
+        var prevY = 0;
+        var hasPrev = false;
+
         for (var i = 0; i < summaries.size(); i++) {
             var entry = summaries[i] as Dictionary;
-            var vol = entry["maxVol"] as Number;
-            if (vol > maxVol) {
-                maxVol = vol;
-            }
-        }
-
-        // Draw bars and labels
-        for (var i = 0; i < summaries.size(); i++) {
-            var entry = summaries[i] as Dictionary;
-            var x = chartLeft + (i * barWidth);
+            var px = chartLeft + (i * stepX);
             var vol = entry["maxVol"] as Number;
             var sessions = entry["sessions"] as Number;
             var dayLabel = entry["day"] as String;
 
-            // Bar
-            if (sessions > 0 && vol > 0) {
-                var barHeight = (vol * chartHeight) / maxVol;
-                if (barHeight < 2) { barHeight = 2; }
-                dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_TRANSPARENT);
-                dc.fillRectangle(x + 2, chartBottom - barHeight, barWidth - 4, barHeight);
-
-                // Volume label inside bar
-                dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(x + barWidth / 2, chartBottom - barHeight / 2 - fontH / 2, font,
-                    vol.toString(), Graphics.TEXT_JUSTIFY_CENTER);
-            }
-
-            // Day label at bottom
+            // X axis date label
             dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(x + barWidth / 2, chartBottom + 2, font, dayLabel, Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(px, chartBottom + 2, font, dayLabel, Graphics.TEXT_JUSTIFY_CENTER);
+
+            if (sessions > 0 && vol > 0) {
+                var py = chartBottom - ((vol * chartHeight) / maxVol);
+
+                // Connect to previous point
+                if (hasPrev) {
+                    dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_TRANSPARENT);
+                    dc.drawLine(prevX, prevY, px, py);
+                }
+
+                // Draw dot
+                dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_TRANSPARENT);
+                dc.fillCircle(px, py, 4);
+
+                // Volume label above dot (in litres)
+                dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+                var volL = (vol / 1000.0).format("%.1f");
+                dc.drawText(px, py - fontH - 2, font, volL, Graphics.TEXT_JUSTIFY_CENTER);
+
+                prevX = px;
+                prevY = py;
+                hasPrev = true;
+            }
         }
     }
 

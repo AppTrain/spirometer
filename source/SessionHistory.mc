@@ -6,7 +6,6 @@ import Toybox.Time.Gregorian;
 module SessionHistory {
 
     const HISTORY_KEY = "session_history";
-    const MAX_DAYS = 7;
 
     // Save a session summary. Multiple sessions per day are stored.
     // Format per entry: { "ts" => unixTimestamp, "vol" => peakVolume, "breaths" => count, "avg" => avgTime }
@@ -32,7 +31,7 @@ module SessionHistory {
         history.add(entry);
 
         // Prune entries older than 7 days
-        var cutoff = Time.now().value() - (MAX_DAYS * 86400);
+        var cutoff = Time.now().value() - (Constants.MAX_DAYS * Constants.SECONDS_PER_DAY);
         var pruned = [] as Array;
         for (var i = 0; i < history.size(); i++) {
             if ((history[i] as Dictionary)["ts"] >= cutoff) {
@@ -59,8 +58,8 @@ module SessionHistory {
         var summaries = [] as Array;
 
         for (var d = 6; d >= 0; d--) {
-            var dayStart = now.value() - ((d + 1) * 86400);
-            var dayEnd = now.value() - (d * 86400);
+            var dayStart = now.value() - ((d + 1) * Constants.SECONDS_PER_DAY);
+            var dayEnd = now.value() - (d * Constants.SECONDS_PER_DAY);
 
             var sessions = 0;
             var totalBreaths = 0;
@@ -83,7 +82,7 @@ module SessionHistory {
                 }
             }
 
-            var info = Gregorian.info(new Time.Moment(dayEnd - 86400), Time.FORMAT_SHORT);
+            var info = Gregorian.info(new Time.Moment(dayEnd - Constants.SECONDS_PER_DAY), Time.FORMAT_SHORT);
             var dayLabel = info.day.toString();
 
             summaries.add({

@@ -46,7 +46,7 @@ class spirometerView extends WatchUi.View {
             elapsedSeconds = (System.getTimer() - startTime) / 1000.0;
             if (lapActive) {
                 currentLapElapsed = (System.getTimer() - lapStartTime) / 1000.0;
-                if (currentLapElapsed >= 12.0) {
+                if (currentLapElapsed >= Constants.INHALE_TIMEOUT) {
                     addLap();
                 }
             }
@@ -57,7 +57,7 @@ class spirometerView extends WatchUi.View {
     function startActivity() as Void {
         session = ActivityRecording.createSession({
             :name => "Spirometer",
-            :sport => Activity.SPORT_TRAINING,
+            :sport => Activity.SPORT_GENERIC,
             :subSport => Activity.SUB_SPORT_GENERIC
         });
 
@@ -182,6 +182,8 @@ class spirometerView extends WatchUi.View {
             dc.drawText(width / 2, y, font, "Press START when you", Graphics.TEXT_JUSTIFY_CENTER);
             y += fontH;
             dc.drawText(width / 2, y, font, "have your Spirometer ready", Graphics.TEXT_JUSTIFY_CENTER);
+            y += fontH + 4;
+            dc.drawText(width / 2, y, font, "DOWN for stats", Graphics.TEXT_JUSTIFY_CENTER);
         } else if (state == STATE_RUNNING && lapActive) {
             dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_TRANSPARENT);
             dc.drawText(width / 2, y, font, "Inhale: " + currentLapElapsed.format("%.1f") + "s", Graphics.TEXT_JUSTIFY_CENTER);
