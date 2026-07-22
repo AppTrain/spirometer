@@ -42,7 +42,8 @@ class VolumeHistoryView extends WatchUi.View {
 
         // Y axis labels (litres)
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(chartLeft - 2, chartTop, font, "4.2", Graphics.TEXT_JUSTIFY_RIGHT);
+        var fourL = chartBottom - ((4000 * chartHeight) / maxVol);
+        dc.drawText(chartLeft - 2, fourL - fontH / 2, font, "4L", Graphics.TEXT_JUSTIFY_RIGHT);
         dc.drawText(chartLeft - 2, chartTop + chartHeight / 2 - fontH / 2, font, "2L", Graphics.TEXT_JUSTIFY_RIGHT);
         dc.drawText(chartLeft - 2, chartBottom - fontH, font, "0", Graphics.TEXT_JUSTIFY_RIGHT);
 
