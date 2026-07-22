@@ -5,6 +5,7 @@ import Toybox.Timer;
 import Toybox.ActivityRecording;
 import Toybox.Activity;
 import Toybox.FitContributor;
+import Toybox.Attention;
 
 class spirometerView extends WatchUi.View {
 
@@ -151,6 +152,9 @@ class spirometerView extends WatchUi.View {
             // Start a new lap
             lapActive = true;
             lapStartTime = System.getTimer();
+            if (Attention has :vibrate) {
+                Attention.vibrate([new Attention.VibeProfile(50, 200)]);
+            }
         }
     }
 
