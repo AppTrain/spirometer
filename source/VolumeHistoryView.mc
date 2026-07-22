@@ -2,7 +2,7 @@ import Toybox.Graphics;
 import Toybox.WatchUi;
 import Toybox.Lang;
 
-class HistoryView extends WatchUi.View {
+class VolumeHistoryView extends WatchUi.View {
 
     var summaries as Array = [];
 
@@ -22,7 +22,7 @@ class HistoryView extends WatchUi.View {
 
         // Title
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, 2, Graphics.FONT_TINY, "Daily Breaths", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(width / 2, 2, Graphics.FONT_TINY, "Daily Volume", Graphics.TEXT_JUSTIFY_CENTER);
 
         var chartTop = dc.getFontHeight(Graphics.FONT_TINY) + 16;
         var chartBottom = height - fontH - 20;
@@ -35,7 +35,7 @@ class HistoryView extends WatchUi.View {
         var maxVol = 500;
         for (var i = 0; i < summaries.size(); i++) {
             var entry = summaries[i] as Dictionary;
-            var vol = entry["avgVol"] as Number;
+            var vol = entry["maxVol"] as Number;
             if (vol > maxVol) {
                 maxVol = vol;
             }
@@ -45,41 +45,21 @@ class HistoryView extends WatchUi.View {
         for (var i = 0; i < summaries.size(); i++) {
             var entry = summaries[i] as Dictionary;
             var x = chartLeft + (i * barWidth);
-            var vol = entry["avgVol"] as Number;
+            var vol = entry["maxVol"] as Number;
             var sessions = entry["sessions"] as Number;
             var dayLabel = entry["day"] as String;
 
-            // Bar - striped for multi-session days
-            if (sessions > 0) {
+            // Bar
+            if (sessions > 0 && vol > 0) {
                 var barHeight = (vol * chartHeight) / maxVol;
                 if (barHeight < 2) { barHeight = 2; }
-                var barX = x + 2;
-                var barW = barWidth - 4;
-                var barTop = chartBottom - barHeight;
+                dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_TRANSPARENT);
+                dc.fillRectangle(x + 2, chartBottom - barHeight, barWidth - 4, barHeight);
 
-                if (sessions == 1) {
-                    dc.setColor(Graphics.COLOR_BLUE, Graphics.COLOR_TRANSPARENT);
-                    dc.fillRectangle(barX, barTop, barW, barHeight);
-                } else {
-                    // Draw alternating stripes, one per session
-                    var stripeHeight = barHeight / sessions;
-                    if (stripeHeight < 2) { stripeHeight = 2; }
-                    for (var s = 0; s < sessions; s++) {
-                        var sy = chartBottom - ((s + 1) * stripeHeight);
-                        if (s % 2 == 0) {
-                            dc.setColor(Graphics.COLOR_BLUE, Graphics.COLOR_TRANSPARENT);
-                        } else {
-                            dc.setColor(Graphics.COLOR_DK_BLUE, Graphics.COLOR_TRANSPARENT);
-                        }
-                        dc.fillRectangle(barX, sy, barW, stripeHeight);
-                    }
-                }
-
-                // Total breath count inside bar
-                var breaths = entry["totalBreaths"] as Number;
+                // Volume label inside bar
                 dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
                 dc.drawText(x + barWidth / 2, chartBottom - barHeight / 2 - fontH / 2, font,
-                    breaths.toString(), Graphics.TEXT_JUSTIFY_CENTER);
+                    vol.toString(), Graphics.TEXT_JUSTIFY_CENTER);
             }
 
             // Day label at bottom
@@ -90,7 +70,7 @@ class HistoryView extends WatchUi.View {
 
 }
 
-class HistoryDelegate extends WatchUi.BehaviorDelegate {
+class VolumeHistoryDelegate extends WatchUi.BehaviorDelegate {
 
     function initialize() {
         BehaviorDelegate.initialize();
@@ -98,6 +78,11 @@ class HistoryDelegate extends WatchUi.BehaviorDelegate {
 
     function onBack() as Boolean {
         WatchUi.popView(WatchUi.SLIDE_DOWN);
+        return true;
+    }
+
+    function onNextPage() as Boolean {
+        WatchUi.pushView(new HistoryView(), new HistoryDelegate(), WatchUi.SLIDE_UP);
         return true;
     }
 

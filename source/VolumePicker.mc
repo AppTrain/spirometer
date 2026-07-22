@@ -1,16 +1,21 @@
 import Toybox.Graphics;
 import Toybox.WatchUi;
 import Toybox.Lang;
+import Toybox.Application;
 
 class VolumePicker extends WatchUi.View {
 
     var selectedVolume as Number = 1500;
     const MIN_VOLUME = 250;
-    const MAX_VOLUME = 4000;
+    const MAX_VOLUME = 4250;
     const INCREMENT = 250;
 
     function initialize() {
         View.initialize();
+        var saved = Application.Storage.getValue("lastVolume");
+        if (saved != null) {
+            selectedVolume = saved as Number;
+        }
     }
 
     function onUpdate(dc as Dc) as Void {
@@ -64,7 +69,8 @@ class VolumePickerDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onSelect() as Boolean {
-        // Confirm selection
+        // Confirm selection and remember volume for next time
+        Application.Storage.setValue("lastVolume", picker.selectedVolume);
         parentView.saveWithVolume(picker.selectedVolume);
         WatchUi.popView(WatchUi.SLIDE_DOWN);
         return true;

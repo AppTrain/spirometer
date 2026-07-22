@@ -66,6 +66,7 @@ module SessionHistory {
             var totalBreaths = 0;
             var totalVol = 0;
             var totalAvgTime = 0.0;
+            var dayMaxVol = 0;
 
             for (var i = 0; i < history.size(); i++) {
                 var entry = history[i] as Dictionary;
@@ -75,17 +76,22 @@ module SessionHistory {
                     totalBreaths += entry["breaths"] as Number;
                     totalVol += entry["vol"] as Number;
                     totalAvgTime += entry["avg"] as Float;
+                    var vol = entry["vol"] as Number;
+                    if (vol > dayMaxVol) {
+                        dayMaxVol = vol;
+                    }
                 }
             }
 
             var info = Gregorian.info(new Time.Moment(dayEnd - 86400), Time.FORMAT_SHORT);
-            var dayLabel = info.month.toString() + "/" + info.day.toString();
+            var dayLabel = info.day.toString();
 
             summaries.add({
                 "day" => dayLabel,
                 "sessions" => sessions,
                 "totalBreaths" => totalBreaths,
                 "avgVol" => (sessions > 0) ? (totalVol / sessions) : 0,
+                "maxVol" => dayMaxVol,
                 "avgTime" => (sessions > 0) ? (totalAvgTime / sessions) : 0.0
             });
         }

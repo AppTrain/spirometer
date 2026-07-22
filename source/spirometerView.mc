@@ -143,6 +143,10 @@ class spirometerView extends WatchUi.View {
             if (session != null) {
                 session.addLap();
             }
+            // Show hold-breath countdown before returning to lap list
+            var holdView = new HoldBreathView();
+            var holdDelegate = new HoldBreathDelegate();
+            WatchUi.pushView(holdView, holdDelegate, WatchUi.SLIDE_UP);
         } else {
             // Start a new lap
             lapActive = true;
@@ -190,6 +194,9 @@ class spirometerView extends WatchUi.View {
         } else {
             dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
             dc.drawText(width / 2, y, font, "STOPPED", Graphics.TEXT_JUSTIFY_CENTER);
+            y += fontH;
+            dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(width / 2, y, font, "DOWN for stats", Graphics.TEXT_JUSTIFY_CENTER);
         }
         y += fontH + 4;
 
