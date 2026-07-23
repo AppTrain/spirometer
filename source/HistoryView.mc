@@ -22,36 +22,77 @@ class HistoryView extends WatchUi.View {
 
         // Title
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, 2, Graphics.FONT_TINY, "Daily Breaths", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(width / 2, 2, Graphics.FONT_TINY, "Progress", Graphics.TEXT_JUSTIFY_CENTER);
 
-        var chartTop = dc.getFontHeight(Graphics.FONT_TINY) + 16;
+        // Calculate weekly totals for key
+        var weekMaxVol = 0;
+        var weekMaxBreaths = 0;
+        for (var k = 0; k < summaries.size(); k++) {
+            var s = summaries[k] as Dictionary;
+            var mv = s["maxVol"] as Number;
+            var tb = s["totalBreaths"] as Number;
+            if (mv > weekMaxVol) { weekMaxVol = mv; }
+            if (tb > weekMaxBreaths) { weekMaxBreaths = tb; }
+        }
+
+        // Key line
+        var keyY = dc.getFontHeight(Graphics.FONT_TINY) + 2;
+        var volStr = (weekMaxVol / 1000.0).format("%.1f");
+        // "Best: " in white, volume in green, " / " in white, breaths in yellow
+        var bestPrefix = "PR: ";
+        var volPart = volStr + "L";
+        var sep = " / ";
+        var breathPart = weekMaxBreaths.toString() + " huffs";
+        var totalStr = bestPrefix + volPart + sep + breathPart;
+        var totalW = dc.getTextWidthInPixels(totalStr, font);
+        var startX = (width - totalW) / 2;
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(startX, keyY, font, bestPrefix, Graphics.TEXT_JUSTIFY_LEFT);
+        startX += dc.getTextWidthInPixels(bestPrefix, font);
+        dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(startX, keyY, font, volPart, Graphics.TEXT_JUSTIFY_LEFT);
+        startX += dc.getTextWidthInPixels(volPart, font);
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(startX, keyY, font, sep, Graphics.TEXT_JUSTIFY_LEFT);
+        startX += dc.getTextWidthInPixels(sep, font);
+        dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(startX, keyY, font, breathPart, Graphics.TEXT_JUSTIFY_LEFT);
+
+        var chartTop = keyY + fontH + 4;
         var chartBottom = height - fontH - 20;
         var chartHeight = chartBottom - chartTop;
         var chartLeft = 40;
         var chartRight = width - 40;
         var barWidth = (chartRight - chartLeft) / 7;
 
-        // Find max volume for scaling
-        var maxVol = 500;
-        for (var i = 0; i < summaries.size(); i++) {
-            var entry = summaries[i] as Dictionary;
-            var vol = entry["avgVol"] as Number;
-            if (vol > maxVol) {
-                maxVol = vol;
-            }
-        }
+        // Max volume scale
+        var volScale = Constants.MAX_VOLUME;
+
+        // Draw Y axis
+        dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+        dc.drawLine(chartLeft, chartTop, chartLeft, chartBottom);
+        // Draw X axis
+        dc.drawLine(chartLeft, chartBottom, chartRight, chartBottom);
+
+        // Y axis labels (volume in litres)
+        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+        var fourL = chartBottom - ((4000 * chartHeight) / Constants.MAX_VOLUME);
+        dc.drawText(chartLeft - 2, fourL - fontH / 2, font, "4L", Graphics.TEXT_JUSTIFY_RIGHT);
+        dc.drawText(chartLeft - 2, chartTop + chartHeight / 2 - fontH / 2, font, "2L", Graphics.TEXT_JUSTIFY_RIGHT);
+        dc.drawText(chartLeft - 2, chartBottom - fontH, font, "0", Graphics.TEXT_JUSTIFY_RIGHT);
 
         // Draw bars and labels
         for (var i = 0; i < summaries.size(); i++) {
             var entry = summaries[i] as Dictionary;
             var x = chartLeft + (i * barWidth);
-            var vol = entry["avgVol"] as Number;
             var sessions = entry["sessions"] as Number;
+            var breaths = entry["totalBreaths"] as Number;
+            var maxVol = entry["maxVol"] as Number;
             var dayLabel = entry["day"] as String;
 
-            // Bar - striped for multi-session days
-            if (sessions > 0) {
-                var barHeight = (vol * chartHeight) / maxVol;
+            // Bar - height based on peak volume, striped for multi-session days
+            if (sessions > 0 && maxVol > 0) {
+                var barHeight = (maxVol * chartHeight) / volScale;
                 if (barHeight < 2) { barHeight = 2; }
                 var barX = x + 2;
                 var barW = barWidth - 4;
@@ -75,11 +116,18 @@ class HistoryView extends WatchUi.View {
                     }
                 }
 
-                // Total breath count inside bar
-                var breaths = entry["totalBreaths"] as Number;
-                dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+                // Breath count inside bar
+                dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
                 dc.drawText(x + barWidth / 2, chartBottom - barHeight / 2 - fontH / 2, font,
                     breaths.toString(), Graphics.TEXT_JUSTIFY_CENTER);
+
+                // Peak volume in litres above bar
+                if (maxVol > 0) {
+                    var volL = (maxVol / 1000.0).format("%.1f");
+                    dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_TRANSPARENT);
+                    dc.drawText(x + barWidth / 2, barTop - fontH, font,
+                        volL, Graphics.TEXT_JUSTIFY_CENTER);
+                }
             }
 
             // Day label at bottom

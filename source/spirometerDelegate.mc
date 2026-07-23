@@ -32,7 +32,7 @@ class spirometerDelegate extends WatchUi.BehaviorDelegate {
     // Down button shows history when not in an activity
     function onNextPage() as Boolean {
         if (view.state != spirometerView.STATE_RUNNING) {
-            WatchUi.pushView(new VolumeHistoryView(), new VolumeHistoryDelegate(), WatchUi.SLIDE_UP);
+            WatchUi.pushView(new HistoryView(), new HistoryDelegate(), WatchUi.SLIDE_UP);
             return true;
         }
         return false;
