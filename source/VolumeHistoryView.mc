@@ -22,7 +22,7 @@ class VolumeHistoryView extends WatchUi.View {
 
         // Title
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, 2, Graphics.FONT_TINY, "Daily Volume", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(width / 2, 2, Graphics.FONT_TINY, "Peak Volume", Graphics.TEXT_JUSTIFY_CENTER);
 
         var chartTop = dc.getFontHeight(Graphics.FONT_TINY) + 16;
         var chartBottom = height - fontH - 20;

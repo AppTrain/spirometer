@@ -57,9 +57,12 @@ module SessionHistory {
         var now = Time.now();
         var summaries = [] as Array;
 
+        // Get today's local midnight
+        var todayStart = Time.today().value();
+
         for (var d = 6; d >= 0; d--) {
-            var dayStart = now.value() - ((d + 1) * Constants.SECONDS_PER_DAY);
-            var dayEnd = now.value() - (d * Constants.SECONDS_PER_DAY);
+            var dayStart = todayStart - (d * Constants.SECONDS_PER_DAY);
+            var dayEnd = dayStart + Constants.SECONDS_PER_DAY;
 
             var sessions = 0;
             var totalBreaths = 0;
@@ -82,7 +85,7 @@ module SessionHistory {
                 }
             }
 
-            var info = Gregorian.info(new Time.Moment(dayEnd - Constants.SECONDS_PER_DAY), Time.FORMAT_SHORT);
+            var info = Gregorian.info(new Time.Moment(dayStart), Time.FORMAT_SHORT);
             var dayLabel = info.day.toString();
 
             summaries.add({
