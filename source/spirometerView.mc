@@ -81,6 +81,10 @@ class spirometerView extends WatchUi.View {
     }
 
     function stopActivity() as Void {
+        // Complete any in-progress lap
+        if (lapActive) {
+            completeLap();
+        }
         if (session != null) {
             // Write session-level metrics
             if (avgBreathField != null && lapTimes.size() > 0) {
@@ -136,6 +140,9 @@ class spirometerView extends WatchUi.View {
         // Start new inhale countdown
         lapActive = true;
         lapStartTime = System.getTimer();
+        if (Attention has :playTone) {
+            Attention.playTone(Attention.TONE_LAP);
+        }
         var inhaleView = new InhaleCountdownView();
         var inhaleDelegate = new InhaleCountdownDelegate();
         WatchUi.pushView(inhaleView, inhaleDelegate, WatchUi.SLIDE_UP);
