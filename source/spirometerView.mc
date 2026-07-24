@@ -28,6 +28,8 @@ class spirometerView extends WatchUi.View {
     var avgBreathField as FitContributor.Field?;
     var peakVolumeField as FitContributor.Field?;
 
+    var selectedVolume as Number = 0;
+
     function initialize() {
         View.initialize();
     }
@@ -38,6 +40,10 @@ class spirometerView extends WatchUi.View {
     function onShow() as Void {
         updateTimer = new Timer.Timer();
         updateTimer.start(method(:onTick), 100, true);
+        // Auto-show volume picker on first launch
+        if (state == STATE_READY) {
+            showVolumePicker();
+        }
     }
 
     function onTick() as Void {
@@ -51,8 +57,14 @@ class spirometerView extends WatchUi.View {
     }
 
     function startActivity() as Void {
+        // Show volume picker first, then start recording
+        showVolumePicker();
+    }
+
+    function startRecordingWithVolume(volume as Number) as Void {
+        selectedVolume = volume;
         session = ActivityRecording.createSession({
-            :name => "Spirometer",
+            :name => "Spirometer " + volume.toString(),
             :sport => Activity.SPORT_GENERIC,
             :subSport => Activity.SUB_SPORT_BREATHING
         });
@@ -89,10 +101,16 @@ class spirometerView extends WatchUi.View {
                 }
                 avgBreathField.setData(total / lapTimes.size());
             }
+            if (peakVolumeField != null) {
+                peakVolumeField.setData(selectedVolume);
+            }
+            session.stop();
+            session.save();
+            session = null;
         }
+        // Store session summary for history
+        SessionHistory.saveSession(selectedVolume, lapTimes);
         state = STATE_STOPPED;
-        // Show volume picker (session still running to accept record data)
-        showVolumePicker();
     }
 
     function showVolumePicker() as Void {
@@ -102,23 +120,12 @@ class spirometerView extends WatchUi.View {
     }
 
     function saveWithVolume(volume as Number) as Void {
-        if (peakVolumeField != null) {
-            peakVolumeField.setData(volume);
-        }
-        if (session != null) {
-            session.stop();
-            session.save();
-            session = null;
-        }
-        // Store session summary for history
-        SessionHistory.saveSession(volume, lapTimes);
+        // Called from volume picker - start the actual recording
+        startRecordingWithVolume(volume);
     }
 
     function discardActivity() as Void {
-        if (session != null) {
-            session.discard();
-            session = null;
-        }
+        // Volume picker cancelled - don't start
     }
 
     function addLap() as Void {
