@@ -26,7 +26,6 @@ class spirometerView extends WatchUi.View {
     var updateTimer as Timer.Timer?;
     var breathDurationField as FitContributor.Field?;
     var avgBreathField as FitContributor.Field?;
-    var breathCountField as FitContributor.Field?;
     var peakVolumeField as FitContributor.Field?;
 
     function initialize() {
@@ -66,13 +65,9 @@ class spirometerView extends WatchUi.View {
             FitContributor.DATA_TYPE_FLOAT,
             {:mesgType => FitContributor.MESG_TYPE_SESSION, :units => "s"}
         );
-        breathCountField = session.createField("breath_count", 2,
+        peakVolumeField = session.createField("Peak Volume", 3,
             FitContributor.DATA_TYPE_UINT16,
-            {:mesgType => FitContributor.MESG_TYPE_SESSION, :units => "breaths"}
-        );
-        peakVolumeField = session.createField("peak_volume_ml", 3,
-            FitContributor.DATA_TYPE_UINT16,
-            {:mesgType => FitContributor.MESG_TYPE_SESSION, :units => "ml"}
+            {:mesgType => FitContributor.MESG_TYPE_RECORD, :units => "ml"}
         );
 
         session.start();
@@ -94,13 +89,9 @@ class spirometerView extends WatchUi.View {
                 }
                 avgBreathField.setData(total / lapTimes.size());
             }
-            if (breathCountField != null) {
-                breathCountField.setData(lapTimes.size());
-            }
-            session.stop();
         }
         state = STATE_STOPPED;
-        // Show volume picker
+        // Show volume picker (session still running to accept record data)
         showVolumePicker();
     }
 
@@ -115,6 +106,7 @@ class spirometerView extends WatchUi.View {
             peakVolumeField.setData(volume);
         }
         if (session != null) {
+            session.stop();
             session.save();
             session = null;
         }
