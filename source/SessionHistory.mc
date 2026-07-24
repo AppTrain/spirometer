@@ -54,7 +54,6 @@ module SessionHistory {
     // Returns array of { "day" => dayString, "sessions" => count, "totalBreaths" => n, "avgVol" => ml, "avgTime" => s }
     function getDailySummaries() as Array {
         var history = getHistory();
-        var now = Time.now();
         var summaries = [] as Array;
 
         // Get today's local midnight

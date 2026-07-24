@@ -46,9 +46,6 @@ class spirometerView extends WatchUi.View {
             elapsedSeconds = (System.getTimer() - startTime) / 1000.0;
             if (lapActive) {
                 currentLapElapsed = (System.getTimer() - lapStartTime) / 1000.0;
-                if (currentLapElapsed >= Constants.INHALE_TIMEOUT) {
-                    addLap();
-                }
             }
         }
         WatchUi.requestUpdate();
@@ -58,7 +55,7 @@ class spirometerView extends WatchUi.View {
         session = ActivityRecording.createSession({
             :name => "Spirometer",
             :sport => Activity.SPORT_GENERIC,
-            :subSport => Activity.SUB_SPORT_GENERIC
+            :subSport => Activity.SUB_SPORT_BREATHING
         });
 
         breathDurationField = session.createField("breath_duration", 0,
@@ -133,28 +130,27 @@ class spirometerView extends WatchUi.View {
             return;
         }
         if (lapActive) {
-            // Stop the current lap
-            var lapDuration = (System.getTimer() - lapStartTime) / 1000.0;
-            lapTimes.add(lapDuration);
-            lapActive = false;
-            currentLapElapsed = 0.0;
-            if (breathDurationField != null) {
-                breathDurationField.setData(lapDuration);
-            }
-            if (session != null) {
-                session.addLap();
-            }
-            // Show hold-breath countdown before returning to lap list
-            var holdView = new HoldBreathView();
-            var holdDelegate = new HoldBreathDelegate();
-            WatchUi.pushView(holdView, holdDelegate, WatchUi.SLIDE_UP);
-        } else {
-            // Start a new lap
-            lapActive = true;
-            lapStartTime = System.getTimer();
-            if (Attention has :vibrate) {
-                Attention.vibrate([new Attention.VibeProfile(50, 200)]);
-            }
+            // Complete the previous lap
+            completeLap();
+        }
+        // Start new inhale countdown
+        lapActive = true;
+        lapStartTime = System.getTimer();
+        var inhaleView = new InhaleCountdownView();
+        var inhaleDelegate = new InhaleCountdownDelegate();
+        WatchUi.pushView(inhaleView, inhaleDelegate, WatchUi.SLIDE_UP);
+    }
+
+    function completeLap() as Void {
+        var lapDuration = (System.getTimer() - lapStartTime) / 1000.0;
+        lapTimes.add(lapDuration);
+        lapActive = false;
+        currentLapElapsed = 0.0;
+        if (breathDurationField != null) {
+            breathDurationField.setData(lapDuration);
+        }
+        if (session != null) {
+            session.addLap();
         }
     }
 
@@ -185,15 +181,13 @@ class spirometerView extends WatchUi.View {
             y += fontH + 4;
             dc.drawText(width / 2, y, font, "DOWN for stats", Graphics.TEXT_JUSTIFY_CENTER);
         } else if (state == STATE_RUNNING && lapActive) {
-            dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(width / 2, y, font, "Inhale: " + currentLapElapsed.format("%.1f") + "s", Graphics.TEXT_JUSTIFY_CENTER);
+            dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(width / 2, y, font, "Press LAP to start next inhale.", Graphics.TEXT_JUSTIFY_CENTER);
         } else if (state == STATE_RUNNING && lapTimes.size() == 0) {
             dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
             dc.drawText(width / 2, y, font, "Press LAP to start your", Graphics.TEXT_JUSTIFY_CENTER);
             y += fontH;
-            dc.drawText(width / 2, y, font, "first inhale, then press", Graphics.TEXT_JUSTIFY_CENTER);
-            y += fontH;
-            dc.drawText(width / 2, y, font, "LAP again when done.", Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(width / 2, y, font, "first inhale.", Graphics.TEXT_JUSTIFY_CENTER);
         } else if (state == STATE_RUNNING) {
             dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
             dc.drawText(width / 2, y, font, "Press LAP to inhale again.", Graphics.TEXT_JUSTIFY_CENTER);
@@ -214,18 +208,28 @@ class spirometerView extends WatchUi.View {
             startIdx = lapTimes.size() - maxVisible;
         }
         for (var i = startIdx; i < lapTimes.size(); i++) {
-            var line = "Inhale " + (i + 1) + ": " + (lapTimes[i] as Float).format("%.2f") + "s";
+            var line = "Lap " + (i + 1) + ": " + (lapTimes[i] as Float).format("%.1f") + "s";
             dc.drawText(10, y, font, line, Graphics.TEXT_JUSTIFY_LEFT);
             y += fontH;
         }
 
+        // Running total for current lap in list
+        if (lapActive) {
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            var currentLine = "Lap " + (lapTimes.size() + 1) + ": " + currentLapElapsed.format("%.1f") + "s";
+            dc.drawText(10, y, font, currentLine, Graphics.TEXT_JUSTIFY_LEFT);
+            y += fontH;
+        }
+
         // Lap count at bottom
-        if (lapTimes.size() > 0) {
+        var totalBreaths = lapTimes.size();
+        if (lapActive) { totalBreaths += 1; }
+        if (totalBreaths > 0) {
             var avgY = height - fontH - 5;
             dc.setColor(Graphics.COLOR_BLUE, Graphics.COLOR_TRANSPARENT);
-            var label = (lapTimes.size() == 1) ? " breath" : " breaths";
+            var label = (totalBreaths == 1) ? " breath" : " breaths";
             dc.drawText(width / 2, avgY, font,
-                lapTimes.size() + label,
+                totalBreaths + label,
                 Graphics.TEXT_JUSTIFY_CENTER);
         }
     }
